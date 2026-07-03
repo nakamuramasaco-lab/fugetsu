@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>暦占 こよみうら ― 和暦とことばで、あなたを読む</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --washi:#F2EDE0;
+    --sumi:#262622;
+    --ai:#2A4B7C;
+    --ai-usui:#8FA3BF;
+    --rakkan:#B3342E;
+    --kin:#9C8A5A;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--washi);
+    color:var(--sumi);
+    font-family:'Shippori Mincho',serif;
+    line-height:1.9;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(154,138,90,.05), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(42,75,124,.04), transparent 40%);
+    min-height:100vh;
+  }
+  .container{max-width:640px;margin:0 auto;padding:0 20px 80px;}
+  header{text-align:center;padding:56px 0 40px;}
+  .title-eyebrow{
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    font-size:11px;letter-spacing:.35em;color:var(--ai);
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:clamp(34px,8vw,46px);
+    font-weight:500;letter-spacing:.18em;
+  }
+  h1 .yomi{display:block;font-size:12px;letter-spacing:.6em;color:var(--kin);margin-top:6px;font-weight:400;}
+  .lead{font-size:14px;color:#4a4a44;margin-top:22px;letter-spacing:.05em;}
+  .divider{width:1px;height:44px;background:var(--kin);margin:34px auto 0;opacity:.6;}
+
+  .form-card{
+    border:1px solid rgba(38,38,34,.18);
+    padding:34px 28px;
+    background:rgba(255,255,255,.42);
+  }
+  .form-label{
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    font-size:12px;letter-spacing:.2em;color:var(--ai);
+    display:block;margin-bottom:14px;
+  }
+  .date-row{display:flex;gap:10px;}
+  select{
+    flex:1;appearance:none;
+    font-family:'Shippori Mincho',serif;font-size:16px;color:var(--sumi);
+    background:var(--washi);border:1px solid rgba(38,38,34,.3);
+    padding:12px 10px;text-align:center;border-radius:0;
+  }
+  select:focus{outline:2px solid var(--ai);outline-offset:1px;}
+  button.uranau{
+    display:block;width:100%;margin-top:24px;
+    font-family:'Shippori Mincho',serif;font-size:17px;letter-spacing:.5em;text-indent:.5em;
+    color:var(--washi);background:var(--ai);border:none;
+    padding:15px 0;cursor:pointer;transition:background .25s;
+  }
+  button.uranau:hover{background:#1e3a63;}
+  button.uranau:focus-visible{outline:2px solid var(--rakkan);outline-offset:2px;}
+
+  #result{display:none;margin-top:52px;animation:appear .9s ease both;}
+  @keyframes appear{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){#result{animation:none;}}
+
+  .kou-header{text-align:center;margin-bottom:8px;}
+  .sekki-label{
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    font-size:11px;letter-spacing:.3em;color:var(--kin);
+  }
+  .kou-name{font-size:clamp(30px,7vw,40px);letter-spacing:.14em;font-weight:500;margin:6px 0 2px;}
+  .kou-yomi{font-size:12px;letter-spacing:.3em;color:#6a6a60;}
+
+  /* 広重の絵 */
+  .art-frame{display:none;margin:34px auto 0;max-width:380px;}
+  .art-frame.show{display:block;}
+  .art-frame img{
+    width:100%;display:block;
+    border:1px solid rgba(38,38,34,.35);
+    box-shadow:0 6px 18px rgba(38,38,34,.18);
+  }
+  .art-credit{
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    font-size:11px;color:#8a8a80;text-align:center;
+    margin-top:8px;letter-spacing:.05em;
+  }
+
+  /* 短冊 */
+  .tanzaku-wrap{display:flex;justify-content:center;margin:36px 0;}
+  .tanzaku{
+    writing-mode:vertical-rl;
+    background:linear-gradient(160deg,#FBF8EF 0%,#F6F0DF 100%);
+    border:1px solid rgba(156,138,90,.5);
+    box-shadow:3px 4px 0 rgba(42,75,124,.12);
+    padding:34px 26px 60px;
+    min-height:340px;
+    position:relative;
+  }
+  .tanzaku .poem{font-size:19px;letter-spacing:.28em;line-height:2.5;font-weight:500;}
+  .tanzaku .author{font-size:12px;color:#6a6a60;letter-spacing:.2em;margin-top:auto;}
+  .rakkan{
+    position:absolute;bottom:16px;left:14px;
+    writing-mode:horizontal-tb;
+    width:30px;height:30px;background:var(--rakkan);color:#fff;
+    font-size:13px;display:flex;align-items:center;justify-content:center;
+    letter-spacing:0;line-height:1.1;text-align:center;
+    border-radius:2px;font-weight:700;
+  }
+
+  .section-title{
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    font-size:12px;letter-spacing:.3em;color:var(--ai);
+    border-left:3px solid var(--rakkan);padding-left:12px;
+    margin:40px 0 14px;
+  }
+  .honshitsu-copy{font-size:20px;letter-spacing:.1em;font-weight:500;margin-bottom:10px;}
+  p.body-text{font-size:15px;color:#3c3c36;}
+  .suuhi-tag{
+    display:inline-block;margin-top:14px;
+    font-family:'Zen Kaku Gothic New',sans-serif;font-size:12px;
+    color:var(--ai);border:1px solid var(--ai-usui);
+    padding:4px 14px;letter-spacing:.15em;
+  }
+
+  .kyou-box{
+    margin-top:16px;border:1px solid rgba(38,38,34,.18);
+    background:rgba(255,255,255,.42);padding:24px 22px;
+  }
+  .kyou-kou{font-size:13px;color:#6a6a60;letter-spacing:.1em;margin-bottom:8px;}
+  .kyou-level{font-size:22px;letter-spacing:.2em;color:var(--rakkan);font-weight:700;margin-bottom:8px;}
+
+  .share-row{margin-top:36px;text-align:center;}
+  a.share-x{
+    display:inline-block;
+    font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;letter-spacing:.1em;
+    color:var(--washi);background:var(--sumi);text-decoration:none;
+    padding:12px 30px;
+  }
+  a.share-x:hover{background:#000;}
+  .retry{margin-top:18px;text-align:center;}
+  .retry button{
+    background:none;border:none;font-family:'Shippori Mincho',serif;
+    font-size:13px;color:var(--ai);text-decoration:underline;cursor:pointer;letter-spacing:.1em;
+  }
+  footer{
+    margin-top:70px;text-align:center;
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    font-size:11px;color:#8a8a80;letter-spacing:.15em;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="title-eyebrow">和暦 × 七十二候 × 古典のことば</div>
+    <h1>暦占<span class="yomi">こ よ み う ら</span></h1>
+    <p class="lead">あなたが生まれた日、日本の暦は何を告げていたか。<br>千年のことばが、あなたの本質を映します。</p>
+    <div class="divider"></div>
+  </header>
+
+  <div class="form-card">
+    <label class="form-label" for="year">生年月日を選んでください</label>
+    <div class="date-row">
+      <select id="year" aria-label="年"></select>
+      <select id="month" aria-label="月"></select>
+      <select id="day" aria-label="日"></select>
+    </div>
+    <button class="uranau" onclick="uranau()">占う</button>
+  </div>
+
+  <div id="result">
+    <div class="kou-header">
+      <div class="sekki-label" id="sekkiLabel"></div>
+      <div class="kou-name" id="kouName"></div>
+      <div class="kou-yomi" id="kouYomi"></div>
+    </div>
+
+    <div class="art-frame" id="artFrame">
+      <img id="artImg" src="" alt="">
+      <div class="art-credit" id="artCredit"></div>
+    </div>
+
+    <div class="tanzaku-wrap">
+      <div class="tanzaku">
+        <div class="poem" id="poem"></div>
+        <div class="author" id="poemAuthor"></div>
+        <div class="rakkan">暦占</div>
+      </div>
+    </div>
+
+    <div class="section-title">あなたの本質</div>
+    <div class="honshitsu-copy" id="honshitsuCopy"></div>
+    <p class="body-text" id="honshitsuBody"></p>
+    <span class="suuhi-tag" id="suuhiTag"></span>
+
+    <div class="section-title">今日の運勢</div>
+    <div class="kyou-box">
+      <div class="kyou-kou" id="kyouKou"></div>
+      <div class="kyou-level" id="kyouLevel"></div>
+      <p class="body-text" id="kyouBody"></p>
+    </div>
+
+    <div class="share-row">
+      <a class="share-x" id="shareX" href="#" target="_blank" rel="noopener">結果をXでシェアする</a>
+    </div>
+    <div class="retry"><button onclick="location.reload()">もう一度占う</button></div>
+  </div>
+
+  <footer>暦占 こよみうら ― 日本の暦とことばを、次の千年へ。</footer>
+</div>
+
+<script>
+// ===== 十二候データ(各節気の代表候)=====
+// range: [開始MMDD, 終了MMDD]
+const KOU = [
+  {sekki:"立春", name:"東風解凍", yomi:"はるかぜ こおりを とく", range:[204,305],
+   essence:"氷を解かす人",
+   body:"長く固まっていたものを、静かにほどいていく力を持っています。強引に壊すのではなく、東風のようにあたたかさで変化を起こすタイプ。停滞した場に、あなたが入ると空気が動きはじめます。",
+   poem:"東風吹かば にほひおこせよ 梅の花 あるじなしとて 春な忘れそ", author:"菅原道真", lucky:"梅",
+   art:"亀戸梅屋舗"},
+  {sekki:"啓蟄", name:"蟄虫啓戸", yomi:"すごもりむし とを ひらく", range:[306,404],
+   essence:"目覚めを告げる人",
+   body:"眠っていた才能や可能性に、いち早く気づく人です。自分自身も、周囲の人の中に眠るものも。あなたの一言が、誰かの「戸」を開くきっかけになります。焦らず、時が満ちるのを待てる強さも持っています。",
+   poem:"山路来て 何やらゆかし すみれ草", author:"松尾芭蕉", lucky:"すみれ",
+   art:"上野清水堂不忍ノ池"},
+  {sekki:"清明", name:"玄鳥至", yomi:"つばめ きたる", range:[405,505],
+   essence:"春を運ぶ人",
+   body:"燕が春を連れてくるように、あなたが現れると場が明るくなります。行動力があり、遠くまで飛んでいける人。ただし燕が毎年同じ軒に帰るように、帰る場所を大切にすることで、さらに遠くへ行けます。",
+   poem:"世の中に たえて桜の なかりせば 春の心は のどけからまし", author:"在原業平", lucky:"桜",
+   art:"玉川堤の花"},
+  {sekki:"立夏", name:"蛙始鳴", yomi:"かわず はじめて なく", range:[506,605],
+   essence:"最初に声をあげる人",
+   body:"誰も口を開かない場面で、最初に鳴く蛙のような勇気を持っています。あなたの声が合図となり、周囲が続きます。目立つことが目的ではなく、「誰かが言わねば」という責任感が源。その一声は、思っている以上に遠くまで届いています。",
+   poem:"古池や 蛙飛びこむ 水の音", author:"松尾芭蕉", lucky:"若葉",
+   art:"亀戸天神境内"},
+  {sekki:"芒種", name:"腐草為螢", yomi:"くされたるくさ ほたると なる", range:[606,706],
+   essence:"闇に光を生む人",
+   body:"朽ちた草から螢が生まれると、昔の人は考えました。あなたは困難や失敗を、光に変えられる人です。暗い時期を経験した分だけ、灯せる明かりが増えていく。あなたの静かな光は、夜道を行く誰かの目印になっています。",
+   poem:"もの思へば 沢の蛍も わが身より あくがれ出づる 魂かとぞ見る", author:"和泉式部", lucky:"螢",
+   art:"大はしあたけの夕立"},
+  {sekki:"小暑", name:"蓮始開", yomi:"はす はじめて ひらく", range:[707,807],
+   essence:"泥中に花咲く人",
+   body:"蓮は泥の中から茎を伸ばし、水面の上で花を開きます。あなたは環境のせいにせず、どんな場所からでも美しいものを咲かせられる人。今いる場所が濁って見えても、それはあなたの花のための養分です。",
+   poem:"蓮の香や 水をはなるる 茎二寸", author:"与謝蕪村", lucky:"蓮",
+   art:"両国花火"},
+  {sekki:"立秋", name:"涼風至", yomi:"すずかぜ いたる", range:[808,907],
+   essence:"変化の兆しを読む人",
+   body:"真夏の暑さの中に、秋の気配を最初に感じ取る。あなたは目に見えない変化の兆しに敏感な人です。周囲がまだ気づかない流れを察知し、静かに準備を始められる。その先読みの力は、大きな財産です。",
+   poem:"秋来ぬと 目にはさやかに 見えねども 風の音にぞ おどろかれぬる", author:"藤原敏行", lucky:"風鈴",
+   art:"京橋竹河岸"},
+  {sekki:"白露", name:"草露白", yomi:"くさのつゆ しろし", range:[908,1007],
+   essence:"小さな美を見つける人",
+   body:"草の上の露が白く光る、その一瞬に気づける人です。誰もが見過ごす日常の中に、宝物を見つける目を持っています。派手さより深さ。あなたが「きれいだ」と言ったものは、時間が経つほど価値を増します。",
+   poem:"白露に 風の吹きしく 秋の野は つらぬきとめぬ 玉ぞ散りける", author:"文屋朝康", lucky:"露草",
+   art:"猿わか町よるの景"},
+  {sekki:"寒露", name:"鴻雁来", yomi:"こうがん きたる", range:[1008,1107],
+   essence:"約束を守って還る人",
+   body:"雁は毎年、約束のように同じ空を渡ってきます。あなたは信頼の人。一度交わした約束、一度築いた関係を、長い時間をかけて守り続けます。列をなして飛ぶ雁のように、仲間と共に遠くを目指すとき、最も力を発揮します。",
+   poem:"山は暮れて 野は黄昏の 薄かな", author:"与謝蕪村", lucky:"薄",
+   art:"月の岬"},
+  {sekki:"立冬", name:"山茶始開", yomi:"つばき はじめて ひらく", range:[1108,1206],
+   essence:"冬に咲く人",
+   body:"花の少ない初冬に、山茶花はひっそりと咲きはじめます。あなたは皆が縮こまる時期にこそ、力を発揮する人。逆境や閑散期を恐れず、むしろ「今なら自分の花が目立つ」と考えられる。その静かな強さが、人を惹きつけます。",
+   poem:"旅人と 我が名呼ばれん 初時雨", author:"松尾芭蕉", lucky:"山茶花",
+   art:"浅草田甫酉の町詣"},
+  {sekki:"大雪", name:"閉塞成冬", yomi:"そら さむく ふゆと なる", range:[1207,105],
+   essence:"内に力を蓄える人",
+   body:"天地が閉じ、本格的な冬になる候。あなたは外に向かって騒ぐより、内側に深く力を蓄えるタイプです。沈黙は停滞ではなく、準備。雪の下で春を待つ種のように、あなたの中では常に何かが育っています。",
+   poem:"いざさらば 雪見にころぶ 所まで", author:"松尾芭蕉", lucky:"雪",
+   art:"王子装束ゑの木大晦日の狐火"},
+  {sekki:"小寒", name:"芹乃栄", yomi:"せり すなわち さかう", range:[106,203],
+   essence:"寒中に育つ人",
+   body:"厳寒の水辺で、芹は青々と育ちます。あなたは条件の悪さを言い訳にしない人。むしろ厳しい環境でこそ、本来の生命力が発揮されます。七草粥の芹のように、あなたの存在は誰かの一年の始まりを支えています。",
+   poem:"君がため 春の野に出でて 若菜つむ わが衣手に 雪は降りつつ", author:"光孝天皇", lucky:"芹",
+   art:"日本橋雪晴"},
+];
+
+// ===== 数秘 =====
+const SUUHI = {
+  1:{name:"開拓",text:"道なき場所に最初の一歩を刻む"},
+  2:{name:"調和",text:"人と人のあいだに橋を架ける"},
+  3:{name:"創造",text:"ことばと発想で世界を彩る"},
+  4:{name:"堅実",text:"積み重ねを裏切らない土台をつくる"},
+  5:{name:"自由",text:"変化の風に乗って軽やかに動く"},
+  6:{name:"慈愛",text:"そばにいる人を静かに支える"},
+  7:{name:"探求",text:"ものごとの奥にある真実を掘る"},
+  8:{name:"実現",text:"描いたものを現実のかたちにする"},
+  9:{name:"包容",text:"すべてを受け入れて円くおさめる"},
+};
+
+// ===== 今日の運勢(生まれの候と今日の候の距離で12パターン)=====
+const KYOU = [
+  {level:"大吉", text:"生まれの候と今日の候が重なる特別な日。あなたの本質がそのまま追い風になります。迷っていることは、今日決めてよし。"},
+  {level:"吉", text:"季節がひとつ進んだ日。新しい流れの入口にいます。小さな「初めて」をひとつ試すと、思わぬ扉が開きます。"},
+  {level:"中吉", text:"芽吹きの勢いがある日。人に会う予定を優先すると吉。あなたのことばが誰かの背中を押します。"},
+  {level:"吉", text:"成長の途中にある日。結果を急がず、水やりに徹しましょう。積み重ねが後で効いてきます。"},
+  {level:"中吉", text:"満ちていく途中の日。頼まれごとは引き受けて吉。信頼の貯金が増えていきます。"},
+  {level:"小吉", text:"少し立ち止まる日。忙しさの中でも、空を見上げる時間を。見落としていた大事なものに気づけます。"},
+  {level:"吉", text:"生まれの候の正反対にある日。いつもと逆のやり方を試すと、新しい自分が見つかります。あえての遠回りが吉。"},
+  {level:"小吉", text:"実りに向かう調整の日。手放すものを決めると運気が流れ出します。持ち物も予定も、少し軽く。"},
+  {level:"中吉", text:"収穫の気配がある日。過去に蒔いた種から連絡や成果が届きやすい日です。古い縁を大切に。"},
+  {level:"吉", text:"深まりの日。表面的な会話より、一人とじっくり話すことに運があります。聞き役に回ると吉。"},
+  {level:"小吉", text:"蓄えの日。無理に動かず、学びや準備に充てましょう。今日の一頁が、来季のあなたを助けます。"},
+  {level:"中吉", text:"季節が一巡りする直前の日。この一年の自分を振り返ると、次にやるべきことが自然と見えてきます。"},
+];
+
+// ===== ロジック =====
+function toMMDD(m,d){return m*100+d;}
+
+function findKou(m,d){
+  const v=toMMDD(m,d);
+  for(let i=0;i<KOU.length;i++){
+    const[s,e]=KOU[i].range;
+    if(s<=e){ if(v>=s&&v<=e)return i; }
+    else{ if(v>=s||v<=e)return i; } // 年またぎ(閉塞成冬)
+  }
+  return 0;
+}
+
+function suuhiNum(y,m,d){
+  let s=String(y)+String(m).padStart(2,"0")+String(d).padStart(2,"0");
+  let n=[...s].reduce((a,c)=>a+ +c,0);
+  while(n>9)n=[...String(n)].reduce((a,c)=>a+ +c,0);
+  return n===0?9:n;
+}
+
+function uranau(){
+  const y=+document.getElementById("year").value;
+  const m=+document.getElementById("month").value;
+  const d=+document.getElementById("day").value;
+
+  const bi=findKou(m,d);
+  const k=KOU[bi];
+  const n=suuhiNum(y,m,d);
+  const s=SUUHI[n];
+
+  const today=new Date();
+  const ti=findKou(today.getMonth()+1,today.getDate());
+  const dist=(ti-bi+12)%12;
+  const ky=KYOU[dist];
+  const tk=KOU[ti];
+
+  // 広重の絵(img/1.jpg〜img/12.jpg をリポジトリに置くと表示される)
+  const frame=document.getElementById("artFrame");
+  const img=document.getElementById("artImg");
+  frame.classList.remove("show");
+  img.onload=()=>frame.classList.add("show");
+  img.onerror=()=>frame.classList.remove("show");
+  img.src="img/"+(bi+1)+".jpg";
+  img.alt="歌川広重「名所江戸百景 "+k.art+"」";
+  document.getElementById("artCredit").textContent="歌川広重「名所江戸百景 "+k.art+"」(国立国会図書館蔵・保護期間満了)";
+
+  document.getElementById("sekkiLabel").textContent="二十四節気「"+k.sekki+"」のころ";
+  document.getElementById("kouName").textContent=k.name;
+  document.getElementById("kouYomi").textContent=k.yomi;
+  document.getElementById("poem").textContent=k.poem;
+  document.getElementById("poemAuthor").textContent=k.author;
+  document.getElementById("honshitsuCopy").textContent="「"+k.essence+"」× "+s.name+"の質";
+  document.getElementById("honshitsuBody").textContent=k.body+" さらにあなたには「"+s.text+"」という数の質(数秘"+n+")が重なります。季節の力と数の力、ふたつを合わせ持つのがあなたです。";
+  document.getElementById("suuhiTag").textContent="数秘 "+n+"・"+s.name+" ／ 縁のもの:"+k.lucky;
+  document.getElementById("kyouKou").textContent="今日は「"+tk.name+"("+tk.yomi+")」のころ";
+  document.getElementById("kyouLevel").textContent=ky.level;
+  document.getElementById("kyouBody").textContent=ky.text;
+
+  const shareText="私の生まれは七十二候「"+k.name+"("+k.yomi+")」――"+k.essence+"。今日の運勢は"+ky.level+"でした。 #暦占 #こよみうら";
+  document.getElementById("shareX").href="https://twitter.com/intent/tweet?text="+encodeURIComponent(shareText);
+
+  document.getElementById("result").style.display="block";
+  document.getElementById("result").scrollIntoView({behavior:"smooth"});
+}
+
+// ===== セレクト初期化 =====
+(function init(){
+  const ys=document.getElementById("year"),ms=document.getElementById("month"),ds=document.getElementById("day");
+  const now=new Date().getFullYear();
+  for(let y=now;y>=1930;y--){const o=new Option(y+"年",y);ys.add(o);}
+  ys.value=1980;
+  for(let m=1;m<=12;m++)ms.add(new Option(m+"月",m));
+  function fillDays(){
+    const y=+ys.value,m=+ms.value,max=new Date(y,m,0).getDate(),cur=+ds.value||1;
+    ds.innerHTML="";
+    for(let d=1;d<=max;d++)ds.add(new Option(d+"日",d));
+    ds.value=Math.min(cur,max);
+  }
+  ys.onchange=fillDays;ms.onchange=fillDays;fillDays();
+})();
+</script>
+</body>
+</html>
