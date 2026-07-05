@@ -6,8 +6,10 @@
 <title>風月暦 ふうげつごよみ ― 七十二候と千年のことばで、あなたを読む</title>
 <meta property="og:title" content="風月暦 ふうげつごよみ">
 <meta property="og:description" content="あなたが生まれた日、日本の暦は何を告げていたか。七十二候と千年のことばで占う。">
-<meta property="og:image" content="img/ogp.jpg">
+<meta property="og:image" content="https://fugetsu.koyomi-japan.com/img/ogp.jpg">
+<meta property="og:url" content="https://fugetsu.koyomi-japan.com/">
 <meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -185,6 +187,36 @@
   .kou-cell .y{font-family:'Zen Kaku Gothic New',sans-serif;font-size:10px;color:var(--usuzumi);margin-top:4px;letter-spacing:.04em;}
   .kou-cell .d{font-family:'Zen Kaku Gothic New',sans-serif;font-size:10px;color:var(--kincha);margin-top:2px;}
 
+  /* 四季章扉(若冲) */
+  .season-banner{
+    display:flex;gap:16px;align-items:center;
+    margin:30px 0 12px;
+  }
+  .season-banner img{
+    width:110px;height:82px;object-fit:cover;
+    border:1px solid var(--kei);flex-shrink:0;
+  }
+  .season-banner .season-label{margin:0;}
+  .season-banner .season-credit{
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    font-size:10px;color:var(--usuzumi);margin-top:4px;letter-spacing:.03em;
+  }
+
+  /* 特別演出(大吉=鳳凰/誕生日=白鳳) */
+  .tokubetsu{display:none;margin:34px auto 0;max-width:420px;text-align:center;
+    border:2px solid var(--hi);padding:22px 18px;}
+  .tokubetsu.show{display:block;animation:appear 1.2s ease both;}
+  .tokubetsu img{width:100%;display:block;border:1px solid var(--kei);}
+  .tokubetsu .t-label{
+    font-size:20px;font-weight:700;letter-spacing:.3em;color:var(--hi);
+    margin-bottom:12px;
+  }
+  .tokubetsu .t-text{font-size:15px;line-height:2;margin-top:12px;color:#33332e;}
+  .tokubetsu .t-credit{
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    font-size:10px;color:var(--usuzumi);margin-top:8px;letter-spacing:.03em;
+  }
+
   /* 監修 */
   .kanshu{border:1px solid var(--kei);padding:24px 22px;display:flex;gap:16px;align-items:center;}
   .kanshu .in{width:56px;height:56px;border-radius:50%;background:var(--hi);color:#fff;
@@ -280,6 +312,13 @@
       <div class="kyou-kou" id="kyouKou"></div>
       <div class="kyou-level" id="kyouLevel"></div>
       <p class="body-text" id="kyouBody"></p>
+    </div>
+
+    <div class="tokubetsu" id="tokubetsu">
+      <div class="t-label" id="tLabel"></div>
+      <img id="tImg" src="" alt="">
+      <div class="t-credit" id="tCredit"></div>
+      <div class="t-text" id="tText"></div>
     </div>
 
     <div class="sec-head"><div class="label"><span>伝</span>結果をわかちあう</div></div>
@@ -467,19 +506,50 @@ function render(bi,n){
   document.getElementById("shareX").href="https://twitter.com/intent/tweet?text="+encodeURIComponent(shareText)+"&url="+encodeURIComponent(url);
   document.getElementById("shareLine").href="https://social-plugins.line.me/lineit/share?url="+encodeURIComponent(url)+"&text="+encodeURIComponent(shareText);
 
+  renderTokubetsu(ky);
+
   current={k,n,ky,bi};
   const r=document.getElementById("result");
   r.style.display="block";
   r.scrollIntoView({behavior:"smooth"});
 }
 
+let lastMD=null; // 誕生日判定用
 function uranau(){
   const y=+document.getElementById("year").value;
   const m=+document.getElementById("month").value;
   const d=+document.getElementById("day").value;
+  lastMD={m,d};
   render(findKou(m,d), suuhiNum(y,m,d));
 }
-function showKou(i){ render(i,null); }
+function showKou(i){ lastMD=null; render(i,null); }
+
+// 特別演出:誕生日=白鳳(最稀)>大吉=旭日鳳凰
+function renderTokubetsu(ky){
+  const box=document.getElementById("tokubetsu");
+  box.classList.remove("show");
+  const today=new Date();
+  const isBirthday=lastMD && lastMD.m===today.getMonth()+1 && lastMD.d===today.getDate();
+  let mode=null;
+  if(isBirthday)mode="hakuho";
+  else if(ky.level==="大吉")mode="daikichi";
+  if(!mode)return;
+  const img=document.getElementById("tImg");
+  if(mode==="hakuho"){
+    document.getElementById("tLabel").textContent="誕生日の白鳳";
+    img.alt="伊藤若冲「老松白鳳図」";
+    document.getElementById("tCredit").textContent="伊藤若冲「老松白鳳図」";
+    document.getElementById("tText").textContent="お誕生日おめでとうございます。年にただ一日、生まれた日にだけ、白い鳳凰が舞い降ります。あなたの新しい一年が、良き巡りでありますように。";
+  }else{
+    document.getElementById("tLabel").textContent="鳳凰、来たる";
+    img.alt="伊藤若冲「旭日鳳凰図」";
+    document.getElementById("tCredit").textContent="伊藤若冲「旭日鳳凰図」";
+    document.getElementById("tText").textContent="生まれの候と今日の候が重なる、年に数日だけの大吉。旭日とともに鳳凰が舞い降りました。めったに出ない一枚です——どうぞ良い一日を。";
+  }
+  img.onload=()=>box.classList.add("show");
+  img.onerror=()=>box.classList.remove("show");
+  img.src="img/"+mode+".jpg";
+}
 function resetView(){
   document.getElementById("result").style.display="none";
   document.getElementById("uranai").scrollIntoView({behavior:"smooth"});
@@ -601,12 +671,22 @@ async function saveCard(){
   hi.onload=()=>document.getElementById("heroArt").classList.add("show");
   hi.onerror=()=>document.getElementById("heroArt").classList.remove("show");
 
-  // 候一覧
+  // 候一覧(章扉=若冲)
+  const SEASON_ART={
+    "春":{f:"season_spring.jpg",t:"桃花小禽図"},
+    "夏":{f:"season_summer.jpg",t:"紫陽花双鶏図"},
+    "秋":{f:"season_autumn.jpg",t:"紅葉小禽図"},
+    "冬":{f:"season_winter.jpg",t:"雪中錦鶏図"},
+  };
   const list=document.getElementById("kouList");
   ["春","夏","秋","冬"].forEach(sn=>{
-    const lbl=document.createElement("div");
-    lbl.className="season-label";lbl.textContent=sn;
-    list.appendChild(lbl);
+    const banner=document.createElement("div");
+    banner.className="season-banner";
+    const sa=SEASON_ART[sn];
+    banner.innerHTML='<img src="img/'+sa.f+'" alt="伊藤若冲「'+sa.t+'」" onerror="this.style.display=\'none\'">'
+      +'<div><div class="season-label">'+sn+'</div>'
+      +'<div class="season-credit">伊藤若冲「'+sa.t+'」</div></div>';
+    list.appendChild(banner);
     const grid=document.createElement("div");
     grid.className="kou-grid";
     KOU.forEach((k,i)=>{
